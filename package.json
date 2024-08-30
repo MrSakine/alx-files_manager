@@ -2,7 +2,7 @@
   "name": "files_manager",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint --fix",
     "check-lint": "lint [0-9]*.js",

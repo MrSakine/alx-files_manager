@@ -1,10 +1,10 @@
-const redis = require("redis");
+const redis = require('redis');
 
 class RedisClient {
   constructor() {
     this.client = redis.createClient();
-    this.client.on("error", (error) => {
-      console.error("Redis client error:", error);
+    this.client.on('error', (error) => {
+      console.error('Redis client error:', error);
     });
   }
 
@@ -26,7 +26,7 @@ class RedisClient {
 
   async set(key, value, duration) {
     return new Promise((resolve, reject) => {
-      this.client.set(key, value, "EX", duration, (err) => {
+      this.client.set(key, value, 'EX', duration, (err) => {
         if (err) {
           reject(err);
         } else {
