@@ -124,7 +124,7 @@ class FilesController {
     }
 
     const parentId = req.query.parentId !== '0' ? ObjectId(req.query.parentId) : 0;
-    const page = parseInt(req.query.page, 10) || 0;
+    const page = parseInt(req.query.page, 1) || 0;
     const pageSize = 20;
     const skip = page * pageSize;
     const pipeline = [
