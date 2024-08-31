@@ -123,23 +123,21 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const parentId = req.query.parentId !== '0' ? ObjectId(req.query.parentId) : 0;
-    const page = parseInt(req.query.page, 1) || 0;
+    // eslint-disable-next-line prefer-destructuring
+    let parentId = req.query.parentId;
+    if (ObjectId.isValid(parentId)) {
+      parentId = ObjectId(parentId);
+    } else {
+      parentId = 0;
+    }
+    let page = Number(req.query.page) || 0;
+    if (Number.isNaN(page)) page = 0;
     const pageSize = 20;
     const skip = page * pageSize;
     const pipeline = [
-      {
-        $match: {
-          userId: ObjectId(userId),
-          ...(parentId !== 0 && { parentId }),
-        },
-      },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: pageSize,
-      },
+      { $match: { parentId } },
+      { $skip: skip },
+      { $limit: pageSize },
     ];
 
     try {
