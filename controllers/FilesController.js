@@ -130,8 +130,7 @@ class FilesController {
     } else {
       parentId = 0;
     }
-    let page = Number(req.query.page) || 0;
-    if (Number.isNaN(page)) page = 0;
+    const page = Number(req.query.page) || 0;
     const pageSize = 20;
     const skip = page * pageSize;
     const pipeline = [
