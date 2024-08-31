@@ -13,7 +13,7 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const user = await dbClient.users.findOne({ _id: ObjectId(userId) });
+    const user = await dbClient.db.collection('users').findOne({ _id: ObjectId(userId) });
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -36,7 +36,7 @@ class FilesController {
     }
 
     if (parentId !== 0) {
-      const parentFile = await dbClient.files.findOne({
+      const parentFile = await dbClient.db.collection('files').findOne({
         _id: ObjectId(parentId),
       });
       if (!parentFile) {
@@ -56,8 +56,15 @@ class FilesController {
     };
 
     if (type === 'folder') {
-      const result = await dbClient.files.insertOne(fileData);
-      return res.status(201).json(result.ops[0]);
+      const result = await dbClient.db.collection('files').insertOne(fileData);
+      return res.status(201).json({
+        id: result.insertedId,
+        userId: result.ops[0].userId,
+        name: result.ops[0].name,
+        type: result.ops[0].type,
+        isPublic: result.ops[0].isPublic,
+        parentId: result.ops[0].parentId,
+      });
     }
 
     const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -70,8 +77,15 @@ class FilesController {
 
     fileData.localPath = localPath;
 
-    const result = await dbClient.files.insertOne(fileData);
-    return res.status(201).json(result.ops[0]);
+    const result = await dbClient.db.collection('files').insertOne(fileData);
+    return res.status(201).json({
+      id: result.insertedId,
+      userId: result.ops[0].userId,
+      name: result.ops[0].name,
+      type: result.ops[0].type,
+      isPublic: result.ops[0].isPublic,
+      parentId: result.ops[0].parentId,
+    });
   }
 }
 
