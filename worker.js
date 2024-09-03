@@ -41,7 +41,7 @@ fileQueue.process(async (job, done) => {
   }
 });
 
-userQueue.process(async (job) => {
+userQueue.process(async (job, done) => {
   const { userId } = job.data;
 
   if (!userId) {
@@ -56,4 +56,5 @@ userQueue.process(async (job) => {
   }
 
   console.log(`Welcome ${user.email}!`);
+  done();
 });
