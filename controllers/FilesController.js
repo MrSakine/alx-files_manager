@@ -1,4 +1,5 @@
 const fs = require('fs');
+const mime = require('mime-types');
 const { v4: uuidv4 } = require('uuid');
 const { ObjectId } = require('mongodb');
 const Bull = require('bull');
@@ -8,6 +9,40 @@ const redisClient = require('../utils/redis');
 const fileQueue = new Bull('fileQueue');
 
 class FilesController {
+  // eslint-disable-next-line consistent-return
+  static async getFile(req, res) {
+    const token = req.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    const { id } = req.params;
+
+    try {
+      const file = await dbClient.db.collection('files')
+        .findOne({ _id: ObjectId(id) });
+
+      if (!file) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      if (file.type === 'folder') {
+        return res.status(400).json({ error: "A folder doesn't have content" });
+      }
+
+      if (!file.isPublic && (!userId || String(file.userId) !== userId)) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      if (!fs.existsSync(file.localPath)) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      const mimeType = mime.lookup(file.name);
+      res.setHeader('Content-Type', mimeType);
+      fs.createReadStream(file.localPath).pipe(res);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  }
+
   static async postUpload(req, res) {
     const token = req.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
