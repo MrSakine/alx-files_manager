@@ -1,8 +1,11 @@
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { ObjectId } = require('mongodb');
+const Bull = require('bull');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
+
+const fileQueue = new Bull('fileQueue');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -82,6 +85,14 @@ class FilesController {
 
     const result = await dbClient.db.collection('files')
       .insertOne(fileData);
+
+    if (type === 'image') {
+      fileQueue.add({
+        userId: userId.toString(),
+        fileId: result.insertedId.toString(),
+      });
+    }
+
     return res.status(201).json({
       id: result.insertedId,
       userId: result.ops[0].userId,
@@ -101,6 +112,9 @@ class FilesController {
     }
 
     const fileId = req.params.id;
+    // eslint-disable-next-line prefer-destructuring
+    const size = req.query.size;
+
     if (!ObjectId.isValid(fileId)) {
       return res.status(404).json({ error: 'Not found' });
     }
@@ -112,7 +126,22 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    return res.status(200).json(file);
+    let filePath = file.localPath;
+
+    if (size) {
+      const sizes = [100, 250, 500];
+      if (!sizes.includes(parseInt(size, 100))) {
+        return res.status(400).json({ error: 'Invalid size' });
+      }
+      filePath = `${file.localPath}_${size}`;
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const fileData = fs.readFileSync(filePath);
+    return res.status(200).end(fileData);
   }
 
   static async getIndex(req, res) {
