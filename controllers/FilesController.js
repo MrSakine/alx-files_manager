@@ -1,7 +1,7 @@
 const fs = require('fs');
 const mime = require('mime-types');
 const { v4: uuidv4 } = require('uuid');
-const { ObjectId } = require('mongodb');
+const ObjectId = require('mongodb').ObjectID;
 const Bull = require('bull');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');

@@ -1,7 +1,10 @@
 const crypto = require('crypto');
 const ObjectId = require('mongodb').ObjectID;
+const Bull = require('bull');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
+
+const userQueue = new Bull('fileQueue');
 
 class UsersController {
   static async postNew(req, res) {
@@ -31,6 +34,10 @@ class UsersController {
     const result = await dbClient.db.collection('users').insertOne({
       email,
       password: hashedPassword,
+    });
+
+    userQueue.add({
+      userId: result.insertedId.toString(),
     });
 
     return res.status(201).json({ id: result.insertedId, email });

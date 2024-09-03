@@ -1,10 +1,11 @@
 const Bull = require('bull');
 const imageThumbnail = require('image-thumbnail');
 const fs = require('fs');
-const { ObjectId } = require('mongodb');
+const ObjectId = require('mongodb').ObjectID;
 const dbClient = require('./utils/db');
 
 const fileQueue = new Bull('fileQueue');
+const userQueue = new Bull('fileQueue');
 
 // eslint-disable-next-line consistent-return
 fileQueue.process(async (job, done) => {
@@ -38,4 +39,21 @@ fileQueue.process(async (job, done) => {
   } catch (err) {
     done(err);
   }
+});
+
+userQueue.process(async (job) => {
+  const { userId } = job.data;
+
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
+
+  const user = await dbClient.db.collection('users')
+    .findOne({ _id: ObjectId(userId) });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  console.log(`Welcome ${user.email}!`);
 });
