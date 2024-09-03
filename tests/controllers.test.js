@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-disabled-tests */
 /* eslint-disable jest/prefer-expect-assertions */
 /* eslint-disable jest/valid-expect */
 /* eslint-disable prefer-arrow-callback */
@@ -55,7 +56,7 @@ describe('controller tests', () => {
         const response = await requestPost({
           url: `${baseUrl}/users`,
           body: {
-            email: 'testuser@example.com',
+            email: 'testuser2@example.com',
             password: 'securepassword',
           },
           json: true,
@@ -65,7 +66,7 @@ describe('controller tests', () => {
         expect(response.statusCode).to.equal(201);
 
         expect(response.body).to.have.property('email');
-        expect(response.body.email).to.equal('testuser@example.com');
+        expect(response.body.email).to.equal('testuser2@example.com');
       } catch (error) {
         throw new Error(`Request failed: ${error.message}`);
       }
@@ -75,11 +76,11 @@ describe('controller tests', () => {
   describe('login a user', () => {
     it('should log in the user and return a token', async () => {
       try {
+        const auth = Buffer.from('testuser2@example.com:securepassword').toString('base64');
         const response = await requestGet({
           url: `${baseUrl}/connect`,
-          qs: {
-            email: 'testuser@example.com',
-            password: 'securepassword',
+          headers: {
+            Authorization: `Basic ${auth}`,
           },
           json: true,
         });
@@ -110,9 +111,28 @@ describe('controller tests', () => {
         expect(response.statusCode).to.equal(200);
 
         expect(response.body).to.have.property('email');
-        expect(response.body.email).to.equal('testuser@example.com');
+        expect(response.body.email).to.equal('testuser2@example.com');
       } catch (error) {
         console.error('Error during GET /users/me request:', error.message);
+        throw new Error(`Request failed: ${error.message}`);
+      }
+    });
+  });
+
+  describe('disconnect a user', () => {
+    it('should log out the user', async () => {
+      try {
+        const response = await requestGet({
+          url: `${baseUrl}/disconnect`,
+          headers: {
+            'x-token': authToken,
+          },
+          json: true,
+        });
+
+        expect(response).to.have.property('statusCode');
+        expect(response.statusCode).to.equal(204);
+      } catch (error) {
         throw new Error(`Request failed: ${error.message}`);
       }
     });
